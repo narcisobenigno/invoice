@@ -1,5 +1,7 @@
 package invoice.common.es.domain;
 
+import invoice.common.serialization.JSON;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
@@ -7,7 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public interface EventsRegistry {
-    Event.Payload event(String name, byte[] content);
+    Event.Payload event(String name, JSON content);
 
     String name(Class<? extends Event.Payload> clazz);
 
@@ -22,9 +24,9 @@ public interface EventsRegistry {
         }
 
         @Override
-        public Event.Payload event(String name, byte[] content) {
+        public Event.Payload event(String name, JSON content) {
             try {
-                final Constructor<? extends Event.Payload> constructor = this.classIndex.get(name).getConstructor(byte[].class);
+                final Constructor<? extends Event.Payload> constructor = this.classIndex.get(name).getConstructor(JSON.class);
                 constructor.setAccessible(true);
                 return constructor.newInstance(content);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {

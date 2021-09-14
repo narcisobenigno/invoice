@@ -12,6 +12,8 @@ dependencies {
     implementation("org.postgresql:postgresql:42.2.23")
 
     compileOnly("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
     implementation("org.json:json")
 }

@@ -1,16 +1,16 @@
 package invoice.common.es.port.adapter;
 
-import invoice.common.es.domain.Clock;
+import invoice.common.clock.Clock;
 import invoice.common.es.domain.Event;
 import invoice.common.es.domain.EventStream;
 import invoice.common.es.domain.EventsRegistry;
 import invoice.common.es.domain.PersistedEvent;
 import invoice.common.es.domain.Version;
+import invoice.common.serialization.JSON;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.postgres.PostgresPlugin;
 import org.postgresql.util.PGobject;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -69,7 +69,7 @@ public class PostgresEventStream implements EventStream {
                 var payload = new PGobject();
                 payload.setType("json");
                 try {
-                    payload.setValue(new String(event.payload().json(), StandardCharsets.UTF_8));
+                    payload.setValue(event.payload().json().string());
                 } catch (SQLException e) {
                     throw new IllegalStateException(e);
                 }
@@ -101,7 +101,7 @@ public class PostgresEventStream implements EventStream {
                     new PersistedEvent(
                             new Event.Default(
                                     UUID.fromString(rs.getString("aggregate_id")),
-                                    this.eventsRegistry.event(rs.getString("type"), rs.getBytes("payload")),
+                                    this.eventsRegistry.event(rs.getString("type"), new JSON.Object(rs.getString("payload"))),
                                     new Version(rs.getInt("version"))
                             ),
                             rs.getLong("position"),

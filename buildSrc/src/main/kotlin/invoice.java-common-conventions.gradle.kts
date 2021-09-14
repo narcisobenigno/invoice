@@ -11,7 +11,9 @@ dependencies {
         implementation("org.json:json:20210307")
 
         compileOnly("org.projectlombok:lombok:1.18.20")
+        testCompileOnly("org.projectlombok:lombok:1.18.20")
         annotationProcessor("org.projectlombok:lombok:1.18.20")
+        testAnnotationProcessor("org.projectlombok:lombok:1.18.20")
     }
 
 

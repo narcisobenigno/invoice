@@ -1,4 +1,4 @@
-package invoice.common.es.domain;
+package invoice.common.clock;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -18,7 +18,7 @@ public interface Clock {
         public LocalDateTime now() {
             final var current = this.current.get("current");
             this.current.replace("current", current.plusSeconds(1));
-            
+
             return current;
         }
     }

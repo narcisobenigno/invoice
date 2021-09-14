@@ -1,5 +1,6 @@
 package invoice.common.es.domain;
 
+import invoice.common.serialization.JSON;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
@@ -13,7 +14,7 @@ public interface Event {
     Version version();
 
     interface Payload {
-        byte[] json();
+        JSON json();
     }
 
     @EqualsAndHashCode

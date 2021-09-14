@@ -1,21 +1,19 @@
 package invoice.common.es.port.adapter;
 
-import invoice.common.es.domain.Clock;
+import invoice.common.clock.Clock;
 import invoice.common.es.domain.Event;
 import invoice.common.es.domain.EventsRegistry;
 import invoice.common.es.domain.PersistedEvent;
 import invoice.common.es.domain.Version;
-import org.json.JSONObject;
+import invoice.common.serialization.JSON;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,11 +68,13 @@ class PostgresEventStreamTest {
         );
     }
 
+    @EqualsAndHashCode
+    @ToString
     static class SampleEvent implements Event.Payload {
         private final String value;
 
-        public SampleEvent(byte[] json) {
-            this(new JSONObject(new String(json, StandardCharsets.UTF_8)).getString("Value"));
+        public SampleEvent(JSON json) {
+            this(json.stringValue("Value"));
         }
 
         public SampleEvent(String value) {
@@ -82,30 +82,8 @@ class PostgresEventStreamTest {
         }
 
         @Override
-        public byte[] json() {
-            var value = new JSONObject(Map.of("Value", this.value));
-
-            var out = new ByteArrayOutputStream();
-            try (var output = new OutputStreamWriter(out)) {
-                value.write(output);
-                output.flush();
-                return out.toByteArray();
-            } catch (IOException e) {
-                throw new IllegalStateException("error to create byte array output stream", e);
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            SampleEvent that = (SampleEvent) o;
-            return value.equals(that.value);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(value);
+        public JSON json() {
+            return new JSON.Object(Map.of("Value", this.value));
         }
     }
 }
