@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public interface EventStreamContractTest {
-    EventStream createEventStream(Clock streamClock);
+    EventStream createEventStream(Clock streamClock, EventsRegistry eventsRegistry);
 
     void tearDown();
 
@@ -28,7 +28,12 @@ public interface EventStreamContractTest {
 
     @Test
     default void publishes_event() throws EventStream.Exception {
-        var stream = this.createEventStream(new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)));
+        var stream = this.createEventStream(
+                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+                new EventsRegistry.InMemory(Map.of(
+                        "sample-test", SampleEvent.class
+                ))
+        );
 
         stream.publish(List.of(
                 new Event.Default(
@@ -70,7 +75,12 @@ public interface EventStreamContractTest {
 
     @Test
     default void conflicts_when_version_already_exist() {
-        var stream = this.createEventStream(new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)));
+        var stream = this.createEventStream(
+                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+                new EventsRegistry.InMemory(Map.of(
+                        "sample-test", SampleEvent.class
+                ))
+        );
         assertThrows(
                 EventStream.Exception.class,
                 () -> stream.publish(List.of(

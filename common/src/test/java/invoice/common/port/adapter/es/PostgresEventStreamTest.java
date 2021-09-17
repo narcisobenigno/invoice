@@ -7,20 +7,16 @@ import invoice.common.es.EventsRegistry;
 import invoice.common.serialization.JSON;
 import invoice.common.test.Integration;
 
-import java.util.Map;
-
 @Integration
 class PostgresEventStreamTest implements EventStreamContractTest {
     private PostgresEventStream stream;
 
     @Override
-    public EventStream createEventStream(Clock streamClock) {
+    public EventStream createEventStream(Clock streamClock, EventsRegistry eventsRegistry) {
         this.stream = new PostgresEventStream(
                 new PostgresEventStream.Credentials(new JSON.Object(System.getenv("POSTGRES_CREDENTIAL"))),
                 streamClock,
-                new EventsRegistry.InMemory(Map.of(
-                        "sample-test", SampleEvent.class
-                ))
+                eventsRegistry
         );
         this.stream.dropTable();
         this.stream.createTable();
