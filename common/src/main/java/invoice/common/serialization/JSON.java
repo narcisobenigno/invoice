@@ -11,7 +11,7 @@ import java.util.Map;
 public interface JSON {
     String stringValue(String name);
 
-    String string();
+    String marshelled();
 
     class Object implements JSON {
         private final JSONObject content;
@@ -34,7 +34,7 @@ public interface JSON {
         }
 
         @Override
-        public String string() {
+        public String marshelled() {
             var out = new ByteArrayOutputStream();
             try (var output = new OutputStreamWriter(out)) {
                 this.content.write(output);

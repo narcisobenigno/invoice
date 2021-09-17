@@ -70,7 +70,7 @@ public class PostgresEventStream implements EventStream {
                 var payload = new PGobject();
                 payload.setType("json");
                 try {
-                    payload.setValue(event.payload().json().string());
+                    payload.setValue(event.payload().json().marshelled());
                 } catch (SQLException e) {
                     throw new IllegalStateException(e);
                 }
