@@ -8,6 +8,7 @@ import invoice.common.es.domain.PersistedEvent;
 import invoice.common.es.domain.Version;
 import invoice.common.serialization.JSON;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.jdbi.v3.postgres.PostgresPlugin;
 import org.postgresql.util.PGobject;
 
@@ -59,8 +60,8 @@ public class PostgresEventStream implements EventStream {
         this.jdbi.useHandle(handle -> handle.execute("DROP TABLE IF EXISTS events;"));
     }
 
-    public void publish(List<Event.Default> events) {
-        this.jdbi.useHandle(handle -> {
+    public void publish(List<Event.Default> events) throws Exception {
+        try (var handle = this.jdbi.open()) {
             var batch = handle.prepareBatch(
                     "INSERT INTO events(aggregate_id, version, payload, type, recorded_at) " +
                             "VALUES (:aggregate_id, :version, :payload, :type, :recorded_at)"
@@ -81,8 +82,13 @@ public class PostgresEventStream implements EventStream {
                         .bind("recorded_at", this.clock.now())
                         .add();
             });
-            batch.execute();
-        });
+
+            try {
+                batch.execute();
+            } catch (UnableToExecuteStatementException e) {
+                throw new EventStream.Exception(e);
+            }
+        }
     }
 
     public List<PersistedEvent> all() {
