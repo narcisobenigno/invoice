@@ -21,15 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PostgresEventStreamTest {
     @Test
     void publishes_event() {
-        var stream = new PostgresEventStream(
-                new PostgresEventStream.Credentials(new JSON.Object(System.getenv("POSTGRES_CREDENTIAL"))),
-                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
-                new EventsRegistry.InMemory(Map.of(
-                        "sample-test", SampleEvent.class
-                ))
-        );
-        stream.dropTable();
-        stream.createTable();
+        PostgresEventStream stream = createStream();
         stream.publish(List.of(
                 new Event.Default(
                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
@@ -66,6 +58,19 @@ class PostgresEventStreamTest {
                 ),
                 stream.all()
         );
+    }
+
+    private PostgresEventStream createStream() {
+        var stream = new PostgresEventStream(
+                new PostgresEventStream.Credentials(new JSON.Object(System.getenv("POSTGRES_CREDENTIAL"))),
+                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+                new EventsRegistry.InMemory(Map.of(
+                        "sample-test", SampleEvent.class
+                ))
+        );
+        stream.dropTable();
+        stream.createTable();
+        return stream;
     }
 
     @EqualsAndHashCode
