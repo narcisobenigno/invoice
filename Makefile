@@ -8,4 +8,4 @@ test:
 
 .PHONY: test.all
 test.all:
-	@./gradlew test
+	@./gradlew check

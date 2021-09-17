@@ -1,4 +1,4 @@
-package invoice.common.test.port.adapter.es;
+package invoice.common.integration.port.adapter.es;
 
 import invoice.common.clock.Clock;
 import invoice.common.es.Event;

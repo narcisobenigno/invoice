@@ -6,6 +6,53 @@ plugins {
     id("invoice.java-library-conventions")
 }
 
+sourceSets {
+    create("integrationTest") {
+        java.srcDirs("src/integration/java")
+        resources.srcDirs("src/integration/resources")
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().compileClasspath
+        runtimeClasspath += output + sourceSets.main.get().output + sourceSets.test.get().runtimeClasspath
+    }
+}
+
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+val integrationTestAnnotationProcessor: Configuration by configurations.getting {
+    extendsFrom(configurations.testAnnotationProcessor.get())
+}
+
+val integrationTestCompileOnly: Configuration by configurations.getting {
+    extendsFrom(configurations.testCompileOnly.get())
+}
+
+configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+
+    val integrationTest = register<Test>("integration") {
+        description = "Runs integration tests."
+        group = "verification"
+
+        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+        classpath = sourceSets["integrationTest"].runtimeClasspath
+        environment.putIfAbsent(
+            "POSTGRES_CREDENTIAL",
+            "{\"host\":\"localhost:5432\",\"dbname\":\"invoice\",\"username\":\"user\",\"password\":\"password\"}"
+        )
+        shouldRunAfter("test")
+        useJUnitPlatform()
+    }
+
+    check {
+        dependsOn(integrationTest)
+    }
+}
+
 dependencies {
     implementation("org.jdbi:jdbi3-core:3.21.0")
     implementation("org.jdbi:jdbi3-postgres:3.21.0")
@@ -18,4 +65,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testAnnotationProcessor("org.projectlombok:lombok")
     testCompileOnly("org.projectlombok:lombok")
+
+    integrationTestImplementation("org.junit.jupiter:junit-jupiter")
+    integrationTestAnnotationProcessor("org.projectlombok:lombok")
+    integrationTestCompileOnly("org.projectlombok:lombok")
 }
