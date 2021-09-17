@@ -1,4 +1,4 @@
-package invoice.common.es.domain;
+package invoice.common.es;
 
 import invoice.common.serialization.JSON;
 import lombok.EqualsAndHashCode;

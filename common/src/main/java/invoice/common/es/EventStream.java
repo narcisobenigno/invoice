@@ -1,4 +1,4 @@
-package invoice.common.es.domain;
+package invoice.common.es;
 
 import java.util.List;
 

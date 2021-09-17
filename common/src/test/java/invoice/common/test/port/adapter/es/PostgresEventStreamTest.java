@@ -1,11 +1,12 @@
-package invoice.common.es.port.adapter;
+package invoice.common.test.port.adapter.es;
 
 import invoice.common.clock.Clock;
-import invoice.common.es.domain.Event;
-import invoice.common.es.domain.EventStream;
-import invoice.common.es.domain.EventsRegistry;
-import invoice.common.es.domain.PersistedEvent;
-import invoice.common.es.domain.Version;
+import invoice.common.es.Event;
+import invoice.common.es.EventStream;
+import invoice.common.es.EventsRegistry;
+import invoice.common.es.PersistedEvent;
+import invoice.common.es.Version;
+import invoice.common.port.adapter.es.PostgresEventStream;
 import invoice.common.serialization.JSON;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
