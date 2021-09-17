@@ -5,3 +5,7 @@ export POSTGRES_CREDENTIAL := $(or ${POSTGRES_CREDENTIAL},${postgres_credential_
 .PHONY: test
 test:
 	@./gradlew test
+
+.PHONY: test
+test.all:
+	@./gradlew test
