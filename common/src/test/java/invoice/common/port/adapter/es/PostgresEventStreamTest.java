@@ -7,9 +7,9 @@ import invoice.common.es.EventsRegistry;
 import invoice.common.es.PersistedEvent;
 import invoice.common.es.Version;
 import invoice.common.serialization.JSON;
+import invoice.common.test.Integration;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Tag("integration")
+@Integration
 class PostgresEventStreamTest {
     @Test
     void publishes_event() throws EventStream.Exception {
