@@ -6,6 +6,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JSONTest {
@@ -21,7 +22,18 @@ class JSONTest {
         final var sameJson = new JSON.Object("{\"Field1\":  \"Value1\", \"Field2\":  \"Value2\"}");
         final var notEqualJson = new JSON.Object(Map.of("AnotherField1", "AnotherValue1", "AnotherField2", "AnotherValue2"));
 
-        JSONAssert.assertEquals(json.marshelled(), sameJson.marshelled(), JSONCompareMode.STRICT);
-        JSONAssert.assertNotEquals(json.marshelled(), notEqualJson.marshelled(), JSONCompareMode.STRICT);
+        assertAll(
+                "properties",
+                () -> JSONAssert.assertEquals(
+                        json.marshelled(),
+                        sameJson.marshelled(),
+                        JSONCompareMode.STRICT
+                ),
+                () -> JSONAssert.assertNotEquals(
+                        json.marshelled(),
+                        notEqualJson.marshelled(),
+                        JSONCompareMode.STRICT
+                )
+        );
     }
 }

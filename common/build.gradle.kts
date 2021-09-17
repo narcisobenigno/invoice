@@ -7,22 +7,11 @@ plugins {
 }
 
 tasks {
-    val integrationTest = register<Test>("integration") {
-        description = "Runs integration tests."
-        group = "verification"
-
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
+    integration {
         environment.putIfAbsent(
             "POSTGRES_CREDENTIAL",
             "{\"host\":\"localhost:5432\",\"dbname\":\"invoice\",\"username\":\"user\",\"password\":\"password\"}"
         )
-        shouldRunAfter("test")
-        useJUnitPlatform()
-    }
-
-    check {
-        dependsOn(integrationTest)
     }
 }
 
@@ -37,7 +26,4 @@ dependencies {
 
     testAnnotationProcessor("org.projectlombok:lombok")
     testCompileOnly("org.projectlombok:lombok")
-
-    integrationTestAnnotationProcessor("org.projectlombok:lombok")
-    integrationTestCompileOnly("org.projectlombok:lombok")
 }
