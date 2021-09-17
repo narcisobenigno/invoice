@@ -117,6 +117,15 @@ public class PostgresEventStream implements EventStream {
         private final String username;
         private final String password;
 
+        public Credentials(JSON.Object credential) {
+            this(
+                    credential.stringValue("host"),
+                    credential.stringValue("dbname"),
+                    credential.stringValue("username"),
+                    credential.stringValue("password")
+            );
+        }
+
         public Credentials(String host, String dbname, String username, String password) {
             this.host = host;
             this.dbname = dbname;

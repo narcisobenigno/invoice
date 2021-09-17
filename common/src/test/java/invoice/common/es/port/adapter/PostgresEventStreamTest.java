@@ -22,7 +22,7 @@ class PostgresEventStreamTest {
     @Test
     void publishes_event() {
         var stream = new PostgresEventStream(
-                new PostgresEventStream.Credentials("localhost:5432", "invoice", "user", "password"),
+                new PostgresEventStream.Credentials(new JSON.Object(System.getenv("POSTGRES_CREDENTIAL"))),
                 new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
                 new EventsRegistry.InMemory(Map.of(
                         "sample-test", SampleEvent.class
