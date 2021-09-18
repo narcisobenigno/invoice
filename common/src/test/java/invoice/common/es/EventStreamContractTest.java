@@ -4,7 +4,6 @@ import invoice.common.clock.Clock;
 import invoice.common.serialization.JSON;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -18,13 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public interface EventStreamContractTest {
     EventStream createEventStream(Clock streamClock, EventsRegistry eventsRegistry);
-
-    void tearDown();
-
-    @AfterEach
-    default void afterEach() {
-        this.tearDown();
-    }
 
     @Test
     default void publishes_event() throws EventStream.Exception {

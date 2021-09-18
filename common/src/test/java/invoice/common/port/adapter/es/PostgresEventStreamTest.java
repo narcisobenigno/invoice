@@ -6,6 +6,7 @@ import invoice.common.es.EventStreamContractTest;
 import invoice.common.es.EventsRegistry;
 import invoice.common.serialization.JSON;
 import invoice.common.test.Integration;
+import org.junit.jupiter.api.AfterEach;
 
 @Integration
 class PostgresEventStreamTest implements EventStreamContractTest {
@@ -23,8 +24,8 @@ class PostgresEventStreamTest implements EventStreamContractTest {
         return this.stream;
     }
 
-    @Override
-    public void tearDown() {
+    @AfterEach
+    public void afterEach() {
         this.stream.dropTable();
     }
 }

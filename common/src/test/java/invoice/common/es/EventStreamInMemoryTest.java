@@ -7,9 +7,4 @@ public class EventStreamInMemoryTest implements EventStreamContractTest {
     public EventStream createEventStream(Clock streamClock, EventsRegistry eventsRegistry) {
         return new EventStream.InMemory(streamClock);
     }
-
-    @Override
-    public void tearDown() {
-
-    }
 }
