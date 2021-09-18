@@ -20,80 +20,35 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PostgresEventStream implements EventStream {
-    private final static String TABLE_NAME = "events";
-    private final Jdbi jdbi;
-    private final Clock clock;
-    private final EventsRegistry eventsRegistry;
     private final EventsTable eventsTable;
 
-    public PostgresEventStream(Credentials credentials, Clock clock, EventsRegistry eventsRegistry) {
-        this.jdbi = Jdbi.create(
-                        String.format(
-                                "jdbc:postgresql://%s/%s",
-                                credentials.host,
-                                credentials.dbname
-                        ),
-                        credentials.username,
-                        credentials.password
-                )
-                .installPlugin(new PostgresPlugin());
-        this.clock = clock;
-        this.eventsRegistry = eventsRegistry;
-        this.eventsTable = new EventsTable(this.jdbi, this.eventsRegistry);
-    }
-
-    public void createTable() {
-        this.jdbi.useHandle(handle -> handle.execute(String.format(
-                                "CREATE TABLE %1$s(" +
-                                        "position SERIAL PRIMARY KEY," +
-                                        "aggregate_id UUID NOT NULL," +
-                                        "version INTEGER NOT NULL," +
-                                        "type TEXT NOT NULL," +
-                                        "payload JSON NOT NULL," +
-                                        "recorded_at TIMESTAMPTZ DEFAULT now() NOT NULL, " +
-
-                                        "CONSTRAINT \"%1$s_optimistic_lock\" UNIQUE (\"aggregate_id\", \"version\")" +
-                                        ");",
-                                TABLE_NAME
+    public PostgresEventStream(Credentials credentials, Clock clock, EventsRegistry registry) {
+        this.eventsTable = new EventsTable(
+                Jdbi.create(
+                                String.format(
+                                        "jdbc:postgresql://%s/%s",
+                                        credentials.host,
+                                        credentials.dbname
+                                ),
+                                credentials.username,
+                                credentials.password
                         )
-
-                )
+                        .installPlugin(new PostgresPlugin()),
+                registry,
+                clock
         );
     }
 
+    public void createTable() {
+        this.eventsTable.create();
+    }
+
     public void dropTable() {
-        this.jdbi.useHandle(handle -> handle.execute("DROP TABLE IF EXISTS events;"));
+        this.eventsTable.drop();
     }
 
     public void publish(List<Event.Default> events) throws Exception {
-        try (var handle = this.jdbi.open()) {
-            var batch = handle.prepareBatch(
-                    "INSERT INTO events(aggregate_id, version, payload, type, recorded_at) " +
-                            "VALUES (:aggregate_id, :version, :payload, :type, :recorded_at)"
-            );
-            events.forEach(event -> {
-                var payload = new PGobject();
-                payload.setType("json");
-                try {
-                    payload.setValue(event.payload().json().marshelled());
-                } catch (SQLException e) {
-                    throw new IllegalStateException(e);
-                }
-                batch
-                        .bind("aggregate_id", event.aggregateID())
-                        .bind("version", event.version().value())
-                        .bind("type", this.eventsRegistry.name(event.payload().getClass()))
-                        .bind("payload", payload)
-                        .bind("recorded_at", this.clock.now())
-                        .add();
-            });
-
-            try {
-                batch.execute();
-            } catch (UnableToExecuteStatementException e) {
-                throw new EventStream.Exception(e);
-            }
-        }
+        this.eventsTable.batchInsert(events);
     }
 
     public List<Event.PublishedEvent> all() {
@@ -133,14 +88,70 @@ public class PostgresEventStream implements EventStream {
 
         private final Jdbi jdbi;
         private final EventsRegistry registry;
+        private final Clock clock;
 
-        public EventsTable(Jdbi jdbi, EventsRegistry registry) {
+        public EventsTable(Jdbi jdbi, EventsRegistry registry, Clock clock) {
             this.jdbi = jdbi;
             this.registry = registry;
+            this.clock = clock;
         }
 
         public Select select() {
             return new Select(this.jdbi.open(), this.registry);
+        }
+
+        public void batchInsert(List<Event.Default> events) throws Exception {
+            try (var handle = this.jdbi.open()) {
+                var batch = handle.prepareBatch(
+                        "INSERT INTO events(aggregate_id, version, payload, type, recorded_at) " +
+                                "VALUES (:aggregate_id, :version, :payload, :type, :recorded_at)"
+                );
+                events.forEach(event -> {
+                    var payload = new PGobject();
+                    payload.setType("json");
+                    try {
+                        payload.setValue(event.payload().json().marshelled());
+                    } catch (SQLException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    batch
+                            .bind("aggregate_id", event.aggregateID())
+                            .bind("version", event.version().value())
+                            .bind("type", this.registry.name(event.payload().getClass()))
+                            .bind("payload", payload)
+                            .bind("recorded_at", this.clock.now())
+                            .add();
+                });
+
+                try {
+                    batch.execute();
+                } catch (UnableToExecuteStatementException e) {
+                    throw new EventStream.Exception(e);
+                }
+            }
+        }
+
+        public void create() {
+            this.jdbi.useHandle(handle -> handle.execute(String.format(
+                                    "CREATE TABLE %1$s(" +
+                                            "position SERIAL PRIMARY KEY," +
+                                            "aggregate_id UUID NOT NULL," +
+                                            "version INTEGER NOT NULL," +
+                                            "type TEXT NOT NULL," +
+                                            "payload JSON NOT NULL," +
+                                            "recorded_at TIMESTAMPTZ DEFAULT now() NOT NULL, " +
+
+                                            "CONSTRAINT \"%1$s_optimistic_lock\" UNIQUE (\"aggregate_id\", \"version\")" +
+                                            ");",
+                                    TABLE_NAME
+                            )
+
+                    )
+            );
+        }
+
+        public void drop() {
+            this.jdbi.useHandle(handle -> handle.execute("DROP TABLE IF EXISTS events;"));
         }
 
         private static class Select {
