@@ -50,7 +50,7 @@ public interface EventStreamContractTest {
 
         assertEquals(
                 List.of(
-                        new PersistedEvent(
+                        new PublishedEvent(
                                 new Event.Default(
                                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                         new SampleEvent("sample value 1"),
@@ -59,7 +59,7 @@ public interface EventStreamContractTest {
                                 1,
                                 LocalDateTime.of(2021, 1, 1, 0, 0, 0)
                         ),
-                        new PersistedEvent(
+                        new PublishedEvent(
                                 new Event.Default(
                                         UUID.nameUUIDFromBytes("event-uuid-2".getBytes(StandardCharsets.UTF_8)),
                                         new SampleEvent("sample value 2"),
