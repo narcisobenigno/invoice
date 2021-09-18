@@ -47,7 +47,7 @@ public class PostgresEventStream implements EventStream {
         this.eventsTable.drop();
     }
 
-    public void publish(List<Event.Default> events) throws Exception {
+    public void publish(List<Event.Unpublished> events) throws Exception {
         this.eventsTable.batchInsert(events);
     }
 
@@ -100,7 +100,7 @@ public class PostgresEventStream implements EventStream {
             return new Select(this.jdbi.open(), this.registry);
         }
 
-        public void batchInsert(List<Event.Default> events) throws Exception {
+        public void batchInsert(List<Event.Unpublished> events) throws Exception {
             try (var handle = this.jdbi.open()) {
                 var batch = handle.prepareBatch(
                         "INSERT INTO events(aggregate_id, version, payload, type, recorded_at) " +
@@ -217,7 +217,7 @@ public class PostgresEventStream implements EventStream {
 
                 final var events = query.map((rs, ctx) ->
                         new Event.PublishedEvent(
-                                new Event.Default(
+                                new Event.Unpublished(
                                         UUID.fromString(rs.getString("aggregate_id")),
                                         this.registry.event(rs.getString("type"), new JSON.Object(rs.getString("payload"))),
                                         new Version(rs.getInt("version"))

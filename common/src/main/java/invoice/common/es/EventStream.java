@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface EventStream {
-    void publish(List<Event.Default> event) throws Exception;
+    void publish(List<Event.Unpublished> event) throws Exception;
 
     List<Event.PublishedEvent> all() throws Exception;
 
@@ -39,7 +39,7 @@ public interface EventStream {
         }
 
         @Override
-        public void publish(List<Event.Default> events) throws Exception {
+        public void publish(List<Event.Unpublished> events) throws Exception {
             synchronized (this.published) {
                 this.constraints
                         .apply(events)

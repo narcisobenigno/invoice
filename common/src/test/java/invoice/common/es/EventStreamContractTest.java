@@ -28,12 +28,12 @@ public interface EventStreamContractTest {
         );
 
         stream.publish(List.of(
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                         new SampleEvent("sample value 1"),
                         new Version(1)
                 ),
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-2".getBytes(StandardCharsets.UTF_8)),
                         new SampleEvent("sample value 2"),
                         new Version(1)
@@ -43,7 +43,7 @@ public interface EventStreamContractTest {
         assertEquals(
                 List.of(
                         new Event.PublishedEvent(
-                                new Event.Default(
+                                new Event.Unpublished(
                                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                         new SampleEvent("sample value 1"),
                                         new Version(1)
@@ -52,7 +52,7 @@ public interface EventStreamContractTest {
                                 LocalDateTime.of(2021, 1, 1, 0, 0, 0)
                         ),
                         new Event.PublishedEvent(
-                                new Event.Default(
+                                new Event.Unpublished(
                                         UUID.nameUUIDFromBytes("event-uuid-2".getBytes(StandardCharsets.UTF_8)),
                                         new SampleEvent("sample value 2"),
                                         new Version(1)
@@ -76,12 +76,12 @@ public interface EventStreamContractTest {
         assertThrows(
                 EventStream.Exception.class,
                 () -> stream.publish(List.of(
-                        new Event.Default(
+                        new Event.Unpublished(
                                 UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                 new SampleEvent("sample value 1"),
                                 new Version(1)
                         ),
-                        new Event.Default(
+                        new Event.Unpublished(
                                 UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                 new SampleEvent("sample value 2"),
                                 new Version(1)
@@ -99,7 +99,7 @@ public interface EventStreamContractTest {
                 ))
         );
         stream.publish(List.of(
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                         new SampleEvent("sample value 1"),
                         new Version(1)
@@ -108,7 +108,7 @@ public interface EventStreamContractTest {
         assertThrows(
                 EventStream.Exception.class,
                 () -> stream.publish(List.of(
-                        new Event.Default(
+                        new Event.Unpublished(
                                 UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                 new SampleEvent("sample value 2"),
                                 new Version(1)
@@ -127,17 +127,17 @@ public interface EventStreamContractTest {
                 ))
         );
         stream.publish(List.of(
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                         new SampleEvent("sample value"),
                         new Version(1)
                 ),
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                         new AnotherSampleEvent("another sample value"),
                         new Version(2)
                 ),
-                new Event.Default(
+                new Event.Unpublished(
                         UUID.nameUUIDFromBytes("event-uuid-2".getBytes(StandardCharsets.UTF_8)),
                         new SampleEvent("event from other aggregate"),
                         new Version(1)
@@ -146,7 +146,7 @@ public interface EventStreamContractTest {
         assertEquals(
                 List.of(
                         new Event.PublishedEvent(
-                                new Event.Default(
+                                new Event.Unpublished(
                                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                         new SampleEvent("sample value"),
                                         new Version(1)
@@ -155,7 +155,7 @@ public interface EventStreamContractTest {
                                 LocalDateTime.of(2021, 1, 1, 0, 0, 0)
                         ),
                         new Event.PublishedEvent(
-                                new Event.Default(
+                                new Event.Unpublished(
                                         UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                         new AnotherSampleEvent("another sample value"),
                                         new Version(2)

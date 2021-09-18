@@ -20,12 +20,12 @@ public interface Event {
 
     @EqualsAndHashCode
     @ToString
-    class Default implements Event {
+    class Unpublished implements Event {
         private final UUID aggregateID;
         private final Event.Payload payload;
         private final Version version;
 
-        public Default(UUID aggregateID, Event.Payload payload, Version version) {
+        public Unpublished(UUID aggregateID, Event.Payload payload, Version version) {
             this.aggregateID = aggregateID;
             this.payload = payload;
             this.version = version;
