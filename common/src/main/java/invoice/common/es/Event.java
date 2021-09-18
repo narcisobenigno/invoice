@@ -4,6 +4,7 @@ import invoice.common.serialization.JSON;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface Event {
@@ -45,6 +46,43 @@ public interface Event {
             return version;
         }
 
+    }
+
+    @EqualsAndHashCode
+    @ToString
+    class PublishedEvent implements Event {
+        private final Event event;
+        private final long position;
+        private final LocalDateTime recordedAt;
+
+        public PublishedEvent(Event event, long position, LocalDateTime recordedAt) {
+            this.event = event;
+            this.position = position;
+            this.recordedAt = recordedAt;
+        }
+
+        @Override
+        public UUID aggregateID() {
+            return this.event.aggregateID();
+        }
+
+        @Override
+        public Payload payload() {
+            return this.event.payload();
+        }
+
+        @Override
+        public Version version() {
+            return this.event.version();
+        }
+
+        public long position() {
+            return this.position;
+        }
+
+        public LocalDateTime recordedAt() {
+            return this.recordedAt;
+        }
     }
 }
 

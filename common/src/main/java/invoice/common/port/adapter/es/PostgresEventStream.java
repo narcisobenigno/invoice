@@ -4,7 +4,6 @@ import invoice.common.clock.Clock;
 import invoice.common.es.Event;
 import invoice.common.es.EventStream;
 import invoice.common.es.EventsRegistry;
-import invoice.common.es.PublishedEvent;
 import invoice.common.es.Version;
 import invoice.common.serialization.JSON;
 import org.jdbi.v3.core.Jdbi;
@@ -91,7 +90,7 @@ public class PostgresEventStream implements EventStream {
         }
     }
 
-    public List<PublishedEvent> all() {
+    public List<Event.PublishedEvent> all() {
         try (final var handler = this.jdbi.open()) {
 
             return handler.createQuery(
@@ -104,7 +103,7 @@ public class PostgresEventStream implements EventStream {
                             "recorded_at " +
                             "FROM events"
             ).map((rs, ctx) ->
-                    new PublishedEvent(
+                    new Event.PublishedEvent(
                             new Event.Default(
                                     UUID.fromString(rs.getString("aggregate_id")),
                                     this.eventsRegistry.event(rs.getString("type"), new JSON.Object(rs.getString("payload"))),

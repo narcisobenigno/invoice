@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 public interface EventStream {
     void publish(List<Event.Default> event) throws Exception;
 
-    List<PublishedEvent> all() throws Exception;
+    List<Event.PublishedEvent> all() throws Exception;
 
     class Exception extends java.lang.Exception {
         public Exception(Throwable cause) {
@@ -22,7 +22,7 @@ public interface EventStream {
 
     class InMemory implements EventStream {
         private final Clock clock;
-        private final List<PublishedEvent> published;
+        private final List<Event.PublishedEvent> published;
         private final Constraints constraints;
         private long currentPosition;
 
@@ -41,7 +41,7 @@ public interface EventStream {
             synchronized (this.published) {
                 this.constraints
                         .apply(events)
-                        .forEach(event -> this.published.add(new PublishedEvent(
+                        .forEach(event -> this.published.add(new Event.PublishedEvent(
                                 event,
                                 this.currentPosition++,
                                 this.clock.now()
@@ -50,7 +50,7 @@ public interface EventStream {
         }
 
         @Override
-        public List<PublishedEvent> all() {
+        public List<Event.PublishedEvent> all() {
             return List.copyOf(this.published);
         }
 
