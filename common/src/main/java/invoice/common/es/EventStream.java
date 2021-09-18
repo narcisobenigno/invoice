@@ -14,6 +14,8 @@ public interface EventStream {
 
     List<Event.PublishedEvent> all() throws Exception;
 
+    List<Event.PublishedEvent> events(UUID id);
+
     class Exception extends java.lang.Exception {
         public Exception(Throwable cause) {
             super(cause);
@@ -52,6 +54,13 @@ public interface EventStream {
         @Override
         public List<Event.PublishedEvent> all() {
             return List.copyOf(this.published);
+        }
+
+        @Override
+        public List<Event.PublishedEvent> events(UUID id) {
+            return this.published.stream()
+                    .filter(event -> event.aggregateID().equals(id))
+                    .collect(Collectors.toList());
         }
 
         private interface Constraints {

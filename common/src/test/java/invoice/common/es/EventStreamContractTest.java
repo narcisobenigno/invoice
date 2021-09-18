@@ -117,6 +117,58 @@ public interface EventStreamContractTest {
         );
     }
 
+    @Test
+    default void retrieves_events_by_aggregate_id() throws EventStream.Exception {
+        var stream = this.createEventStream(
+                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+                new EventsRegistry.InMemory(Map.of(
+                        "sample-test", SampleEvent.class,
+                        "another-sample-test", AnotherSampleEvent.class
+                ))
+        );
+        stream.publish(List.of(
+                new Event.Default(
+                        UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                        new SampleEvent("sample value"),
+                        new Version(1)
+                ),
+                new Event.Default(
+                        UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                        new AnotherSampleEvent("another sample value"),
+                        new Version(2)
+                ),
+                new Event.Default(
+                        UUID.nameUUIDFromBytes("event-uuid-2".getBytes(StandardCharsets.UTF_8)),
+                        new SampleEvent("event from other aggregate"),
+                        new Version(1)
+                )
+        ));
+        assertEquals(
+                List.of(
+                        new Event.PublishedEvent(
+                                new Event.Default(
+                                        UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                                        new SampleEvent("sample value"),
+                                        new Version(1)
+                                ),
+                                1,
+                                LocalDateTime.of(2021, 1, 1, 0, 0, 0)
+                        ),
+                        new Event.PublishedEvent(
+                                new Event.Default(
+                                        UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                                        new AnotherSampleEvent("another sample value"),
+                                        new Version(2)
+                                ),
+                                2,
+                                LocalDateTime.of(2021, 1, 1, 0, 0, 1)
+                        )
+
+                ),
+                stream.events(UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)))
+        );
+    }
+
     @EqualsAndHashCode
     @ToString
     class SampleEvent implements Event.Payload {
@@ -127,6 +179,26 @@ public interface EventStreamContractTest {
         }
 
         public SampleEvent(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public JSON json() {
+            return new JSON.Object(Map.of("Value", this.value));
+        }
+    }
+
+
+    @EqualsAndHashCode
+    @ToString
+    class AnotherSampleEvent implements Event.Payload {
+        private final String value;
+
+        public AnotherSampleEvent(JSON json) {
+            this(json.stringValue("Value"));
+        }
+
+        public AnotherSampleEvent(String value) {
             this.value = value;
         }
 
