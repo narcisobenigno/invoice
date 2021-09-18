@@ -74,7 +74,7 @@ public interface EventStreamContractTest {
     }
 
     @Test
-    default void conflicts_when_version_already_exist() {
+    default void conflicts_when_publishing_duplicated_version_for_an_aggregate() {
         var stream = this.createEventStream(
                 new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
                 new EventsRegistry.InMemory(Map.of(
@@ -89,6 +89,33 @@ public interface EventStreamContractTest {
                                 new SampleEvent("sample value 1"),
                                 new Version(1)
                         ),
+                        new Event.Default(
+                                UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                                new SampleEvent("sample value 2"),
+                                new Version(1)
+                        )
+                ))
+        );
+    }
+
+    @Test
+    default void conflicts_when_publishing_existing_version_for_an_aggregate() throws EventStream.Exception {
+        var stream = this.createEventStream(
+                new Clock.InMemoryClock(LocalDateTime.of(2021, 1, 1, 0, 0, 0)),
+                new EventsRegistry.InMemory(Map.of(
+                        "sample-test", SampleEvent.class
+                ))
+        );
+        stream.publish(List.of(
+                new Event.Default(
+                        UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
+                        new SampleEvent("sample value 1"),
+                        new Version(1)
+                )
+        ));
+        assertThrows(
+                EventStream.Exception.class,
+                () -> stream.publish(List.of(
                         new Event.Default(
                                 UUID.nameUUIDFromBytes("event-uuid-1".getBytes(StandardCharsets.UTF_8)),
                                 new SampleEvent("sample value 2"),
