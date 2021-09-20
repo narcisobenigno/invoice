@@ -147,7 +147,7 @@ public class PostgresEventStream implements EventStream {
         }
 
         public void drop() {
-            this.jdbi.useHandle(handle -> handle.execute("DROP TABLE IF EXISTS events;"));
+            this.table.drop();
         }
 
         private static class Insert {

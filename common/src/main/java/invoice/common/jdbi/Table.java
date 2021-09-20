@@ -43,6 +43,10 @@ public class Table {
         );
     }
 
+    public void drop() {
+        this.jdbi.useHandle(handle -> handle.execute(String.format("DROP TABLE IF EXISTS %s;", this.name())));
+    }
+
     public Select select() {
         return new Select(this.jdbi.open(), this.configurations, this.name());
     }
