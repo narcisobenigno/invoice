@@ -5,6 +5,17 @@ import invoice.common.es.Event;
 import invoice.common.es.EventStream;
 import invoice.common.es.EventsRegistry;
 import invoice.common.es.Version;
+import invoice.common.jdbi.DefaultColumn;
+import invoice.common.jdbi.IntegerColumn;
+import invoice.common.jdbi.JSONColumn;
+import invoice.common.jdbi.NotNullColumn;
+import invoice.common.jdbi.PrimaryKeyColumn;
+import invoice.common.jdbi.SerialColumn;
+import invoice.common.jdbi.Table;
+import invoice.common.jdbi.TextColumn;
+import invoice.common.jdbi.TimestamptzColumn;
+import invoice.common.jdbi.UUIDColumn;
+import invoice.common.jdbi.UniqueConstraint;
 import invoice.common.serialization.JSON;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
@@ -48,7 +59,7 @@ public class PostgresEventStream implements EventStream {
     }
 
     public void publish(List<Event.Unpublished> events) throws Exception {
-        this.eventsTable.batchInsert(events);
+        this.eventsTable.insert().batch(events);
     }
 
     public List<Event.PublishedEvent> all() {
@@ -89,11 +100,20 @@ public class PostgresEventStream implements EventStream {
         private final Jdbi jdbi;
         private final EventsRegistry registry;
         private final Clock clock;
+        private final Table table;
 
         public EventsTable(Jdbi jdbi, EventsRegistry registry, Clock clock) {
             this.jdbi = jdbi;
             this.registry = registry;
             this.clock = clock;
+            this.table = new Table(jdbi, "events")
+                    .with(new PrimaryKeyColumn(new SerialColumn("position")))
+                    .with(new NotNullColumn(new UUIDColumn("aggregate_id")))
+                    .with(new NotNullColumn(new IntegerColumn("version")))
+                    .with(new NotNullColumn(new TextColumn("type")))
+                    .with(new JSONColumn("payload"))
+                    .with(new NotNullColumn(new DefaultColumn(new TimestamptzColumn("recorded_at"), "now()")))
+                    .with(new UniqueConstraint("events_optimistic_lock", "aggregate_id", "version"));
         }
 
         public Select select() {
@@ -131,23 +151,12 @@ public class PostgresEventStream implements EventStream {
             }
         }
 
+        public Insert insert() {
+            return new Insert(this.jdbi.open(), this.registry, this.clock);
+        }
+
         public void create() {
-            this.jdbi.useHandle(handle -> handle.execute(String.format(
-                                    "CREATE TABLE %1$s(" +
-                                            "position SERIAL PRIMARY KEY," +
-                                            "aggregate_id UUID NOT NULL," +
-                                            "version INTEGER NOT NULL," +
-                                            "type TEXT NOT NULL," +
-                                            "payload JSON NOT NULL," +
-                                            "recorded_at TIMESTAMPTZ DEFAULT now() NOT NULL, " +
-
-                                            "CONSTRAINT \"%1$s_optimistic_lock\" UNIQUE (\"aggregate_id\", \"version\")" +
-                                            ");",
-                                    TABLE_NAME
-                            )
-
-                    )
-            );
+            this.table.create();
         }
 
         public void drop() {
@@ -228,6 +237,49 @@ public class PostgresEventStream implements EventStream {
                 ).list();
                 this.handle.close();
                 return events;
+            }
+        }
+
+        private static class Insert {
+            private final Handle handle;
+            private final EventsRegistry registry;
+            private final Clock clock;
+
+            private Insert(Handle handle, EventsRegistry registry, Clock clock) {
+                this.handle = handle;
+                this.registry = registry;
+                this.clock = clock;
+            }
+
+            void batch(List<Event.Unpublished> events) throws Exception {
+                var batch = handle.prepareBatch(
+                        "INSERT INTO events(aggregate_id, version, payload, type, recorded_at) " +
+                                "VALUES (:aggregate_id, :version, :payload, :type, :recorded_at)"
+                );
+                events.forEach(event -> {
+                    var payload = new PGobject();
+                    payload.setType("json");
+                    try {
+                        payload.setValue(event.payload().json().marshelled());
+                    } catch (SQLException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    batch
+                            .bind("aggregate_id", event.aggregateID())
+                            .bind("version", event.version().value())
+                            .bind("type", this.registry.name(event.payload().getClass()))
+                            .bind("payload", payload)
+                            .bind("recorded_at", this.clock.now())
+                            .add();
+                });
+
+                try {
+                    batch.execute();
+                } catch (UnableToExecuteStatementException e) {
+                    throw new EventStream.Exception(e);
+                } finally {
+                    this.handle.close();
+                }
             }
         }
     }
