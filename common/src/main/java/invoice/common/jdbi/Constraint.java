@@ -1,6 +1,8 @@
 package invoice.common.jdbi;
 
-public interface Constraint extends TableConfiguration {
+public interface Constraint {
+    String sql();
+
     class Base implements Constraint {
         private final String name;
         private final String constraint;
@@ -11,7 +13,7 @@ public interface Constraint extends TableConfiguration {
         }
 
         @Override
-        public final String asString() {
+        public final String sql() {
             return String.format(
                     "CONSTRAINT \"%s\" %s",
                     this.name,

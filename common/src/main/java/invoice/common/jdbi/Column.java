@@ -1,6 +1,10 @@
 package invoice.common.jdbi;
 
-public interface Column extends TableConfiguration {
+public interface Column {
+    String sql();
+
+    String name();
+
     class Definition implements Column {
         private final String name;
         private final String typeName;
@@ -11,12 +15,17 @@ public interface Column extends TableConfiguration {
         }
 
         @Override
-        public final String asString() {
+        public final String sql() {
             return String.format(
                     "%s %s ",
                     this.name,
                     this.typeName
             );
+        }
+
+        @Override
+        public String name() {
+            return this.name;
         }
     }
 
@@ -30,8 +39,13 @@ public interface Column extends TableConfiguration {
         }
 
         @Override
-        public final String asString() {
-            return String.format("%s %s ", this.configured.asString(), this.configuration);
+        public final String sql() {
+            return String.format("%s %s ", this.configured.sql(), this.configuration);
+        }
+
+        @Override
+        public String name() {
+            return this.configured.name();
         }
     }
 }

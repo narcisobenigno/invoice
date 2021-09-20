@@ -37,10 +37,14 @@ public class Table {
         this.jdbi.useHandle(handle -> handle.execute(String.format(
                                 "CREATE TABLE %s(%s)",
                                 this.name(),
-                                this.configurations.asString()
+                                this.configurations.sql()
                         )
                 )
         );
+    }
+
+    public Select select() {
+        return new Select(this.jdbi.open(), this.configurations, this.name());
     }
 
     String name() {
