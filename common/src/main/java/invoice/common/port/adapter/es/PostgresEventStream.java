@@ -12,7 +12,6 @@ import invoice.common.jdbi.IntegerColumn;
 import invoice.common.jdbi.JSONColumn;
 import invoice.common.jdbi.NotNullColumn;
 import invoice.common.jdbi.PrimaryKeyColumn;
-import invoice.common.jdbi.Select;
 import invoice.common.jdbi.SerialColumn;
 import invoice.common.jdbi.Table;
 import invoice.common.jdbi.TextColumn;
@@ -29,37 +28,52 @@ import java.util.List;
 import java.util.UUID;
 
 public class PostgresEventStream implements EventStream {
-    private final EventsTable eventsTable;
+    private final Table events;
     private final EventsRegistry registry;
     private final Clock clock;
 
-    public PostgresEventStream(Credentials credentials, Clock clock, EventsRegistry registry) {
-        this.registry = registry;
-        this.clock = clock;
-        this.eventsTable = new EventsTable(
-                Jdbi.create(
-                                String.format(
-                                        "jdbc:postgresql://%s/%s",
-                                        credentials.host,
-                                        credentials.dbname
-                                ),
-                                credentials.username,
-                                credentials.password
-                        )
-                        .installPlugin(new PostgresPlugin())
+    public PostgresEventStream(Credentials credentials, EventsRegistry registry, Clock clock) {
+        this(
+                new Table(
+                        Jdbi.create(
+                                        String.format(
+                                                "jdbc:postgresql://%s/%s",
+                                                credentials.host,
+                                                credentials.dbname
+                                        ),
+                                        credentials.username,
+                                        credentials.password
+                                )
+                                .installPlugin(new PostgresPlugin())
+                        , "events")
+                        .with(new PrimaryKeyColumn(new SerialColumn("position")))
+                        .with(new NotNullColumn(new UUIDColumn("aggregate_id")))
+                        .with(new NotNullColumn(new IntegerColumn("version")))
+                        .with(new NotNullColumn(new TextColumn("type")))
+                        .with(new NotNullColumn(new JSONColumn("payload")))
+                        .with(new NotNullColumn(new DefaultColumn(new TimestamptzColumn("recorded_at"), "now()")))
+                        .with(new UniqueConstraint("events_optimistic_lock", "aggregate_id", "version")),
+                registry,
+                clock
         );
     }
 
+    private PostgresEventStream(Table events, EventsRegistry registry, Clock clock) {
+        this.events = events;
+        this.registry = registry;
+        this.clock = clock;
+    }
+
     public void createTable() {
-        this.eventsTable.create();
+        this.events.create();
     }
 
     public void dropTable() {
-        this.eventsTable.drop();
+        this.events.drop();
     }
 
     public void publish(List<Event.Unpublished> events) throws Exception {
-        var batch = this.eventsTable.insert();
+        var batch = this.events.insertBatch();
         for (Event.Unpublished event : events) {
             batch = batch.row()
                     .with(new InsertBatch.Parameter("aggregate_id", event.aggregateID()))
@@ -78,7 +92,7 @@ public class PostgresEventStream implements EventStream {
     }
 
     public List<Event.PublishedEvent> all() {
-        return this.eventsTable.select()
+        return this.events.select()
                 .query((rs, ctx) -> new Event.PublishedEvent(
                         new Event.Unpublished(
                                 UUID.fromString(rs.getString("aggregate_id")),
@@ -92,7 +106,7 @@ public class PostgresEventStream implements EventStream {
 
     @Override
     public List<Event.PublishedEvent> events(UUID id) {
-        return this.eventsTable.select()
+        return this.events.select()
                 .where(new EqualToCondition("aggregate_id", new UUIDValue(id)))
                 .query((rs, ctx) -> new Event.PublishedEvent(
                         new Event.Unpublished(
@@ -125,37 +139,6 @@ public class PostgresEventStream implements EventStream {
             this.dbname = dbname;
             this.username = username;
             this.password = password;
-        }
-    }
-
-    private static class EventsTable {
-        private final Table table;
-
-        public EventsTable(Jdbi jdbi) {
-            this.table = new Table(jdbi, "events")
-                    .with(new PrimaryKeyColumn(new SerialColumn("position")))
-                    .with(new NotNullColumn(new UUIDColumn("aggregate_id")))
-                    .with(new NotNullColumn(new IntegerColumn("version")))
-                    .with(new NotNullColumn(new TextColumn("type")))
-                    .with(new NotNullColumn(new JSONColumn("payload")))
-                    .with(new NotNullColumn(new DefaultColumn(new TimestamptzColumn("recorded_at"), "now()")))
-                    .with(new UniqueConstraint("events_optimistic_lock", "aggregate_id", "version"));
-        }
-
-        public Select select() {
-            return this.table.select();
-        }
-
-        public InsertBatch insert() {
-            return this.table.insertBatch();
-        }
-
-        public void create() {
-            this.table.create();
-        }
-
-        public void drop() {
-            this.table.drop();
         }
     }
 }

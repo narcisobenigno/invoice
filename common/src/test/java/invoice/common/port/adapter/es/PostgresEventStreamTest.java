@@ -16,8 +16,7 @@ class PostgresEventStreamTest implements EventStreamContractTest {
     public EventStream createEventStream(Clock streamClock, EventsRegistry eventsRegistry) {
         this.stream = new PostgresEventStream(
                 new PostgresEventStream.Credentials(new JSON.Object(System.getenv("POSTGRES_CREDENTIAL"))),
-                streamClock,
-                eventsRegistry
+                eventsRegistry, streamClock
         );
         this.stream.dropTable();
         this.stream.createTable();
