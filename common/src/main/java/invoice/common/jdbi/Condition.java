@@ -2,9 +2,7 @@ package invoice.common.jdbi;
 
 import org.jdbi.v3.core.statement.Query;
 
-public interface Condition {
-    String sql();
-
+public interface Condition extends Script {
     Query bind(Query query);
 
     interface Value {

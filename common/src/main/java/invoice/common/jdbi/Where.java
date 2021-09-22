@@ -2,9 +2,7 @@ package invoice.common.jdbi;
 
 import org.jdbi.v3.core.statement.Query;
 
-public interface Where {
-    String sql();
-
+public interface Where extends Script {
     Query bind(Query query);
 
     class NoWhere implements Where {

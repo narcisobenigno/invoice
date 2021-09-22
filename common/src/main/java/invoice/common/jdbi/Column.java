@@ -1,8 +1,6 @@
 package invoice.common.jdbi;
 
-public interface Column {
-    String sql();
-
+public interface Column extends Script {
     String name();
 
     class Definition implements Column {

@@ -1,8 +1,6 @@
 package invoice.common.jdbi;
 
-public interface Constraint {
-    String sql();
-
+public interface Constraint extends Script {
     class Base implements Constraint {
         private final String name;
         private final String constraint;
