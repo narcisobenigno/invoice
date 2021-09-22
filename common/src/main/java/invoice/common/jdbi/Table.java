@@ -51,6 +51,10 @@ public class Table {
         return new Select(this.jdbi.open(), this.configurations, this.name());
     }
 
+    public InsertBatch insertBatch() {
+        return new InsertBatch(this.jdbi.open(), this.name());
+    }
+
     String name() {
         return this.name;
     }
