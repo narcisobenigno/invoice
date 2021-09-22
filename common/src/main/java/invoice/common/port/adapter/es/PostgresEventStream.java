@@ -11,6 +11,7 @@ import invoice.common.jdbi.IntegerColumn;
 import invoice.common.jdbi.JSONColumn;
 import invoice.common.jdbi.NotNullColumn;
 import invoice.common.jdbi.PrimaryKeyColumn;
+import invoice.common.jdbi.Select;
 import invoice.common.jdbi.SerialColumn;
 import invoice.common.jdbi.Table;
 import invoice.common.jdbi.TextColumn;
@@ -129,12 +130,12 @@ public class PostgresEventStream implements EventStream {
                     .with(new NotNullColumn(new UUIDColumn("aggregate_id")))
                     .with(new NotNullColumn(new IntegerColumn("version")))
                     .with(new NotNullColumn(new TextColumn("type")))
-                    .with(new JSONColumn("payload"))
+                    .with(new NotNullColumn(new JSONColumn("payload")))
                     .with(new NotNullColumn(new DefaultColumn(new TimestamptzColumn("recorded_at"), "now()")))
                     .with(new UniqueConstraint("events_optimistic_lock", "aggregate_id", "version"));
         }
 
-        public invoice.common.jdbi.Select select() {
+        public Select select() {
             return this.table.select();
         }
 
